@@ -21,7 +21,7 @@ function initCamera() {
 var scene;
 function initScene() {
     scene = new Physijs.Scene();
-    scene.setGravity(new THREE.Vector3(0, -10, 0));//重力加速度
+    scene.setGravity(new THREE.Vector3(0, -7.8, 0));//重力加速度
     scene.background = new THREE.Color(0xbfd1e5);
 }
 /**
@@ -33,16 +33,14 @@ function initLight() {
     light = new THREE.DirectionalLight(0xffffff);
     light.position.set(1, 1, 1);
     scene.add(light);
-    breakableObject();
 }
 
 /**
  * 物理引擎
  */
-function breakableObject(a,b,c,impactNormal,impactPoint,impulse) {
-    if(impactNormal&&impactPoint&&impulse>200) {
+function breakableObject(a, b, c, impactNormal, impactPoint, impulse) {
+    if (impactNormal && impactPoint && impulse > 250) {
         var debris = convexBreaker.subdivideByImpact(this, impactPoint, impactNormal, 1, 2, 1.5);
-        scene.remove(this);
         var numObjects = debris.length;
         for (var j = 0; j < numObjects; j++) {
             var material = new Physijs.createMaterial(
@@ -56,6 +54,7 @@ function breakableObject(a,b,c,impactNormal,impactPoint,impulse) {
             scene.add(object);
             convexBreaker.prepareBreakableObject(object, debris[j].userData.mass, new THREE.Vector3(), new THREE.Vector3(), true);
         }
+        scene.remove(this);
     }
 }
 var pos = new THREE.Vector3();
@@ -63,7 +62,7 @@ var quat = new THREE.Quaternion();
 function createGround() {
     // Ground
 
-    var object = new THREE.BoxGeometry(100, 1, 100, 1, 1, 1);
+    var object = new THREE.BoxGeometry(40, 1, 40, 1, 1, 1);
     var ground_material = new Physijs.createMaterial(
         new THREE.MeshLambertMaterial(),
         .8, // high friction
@@ -108,8 +107,7 @@ var time = 0;
 var clock = new THREE.Clock();
 function render() {
     var deltaTime = clock.getDelta();
-    //  updatePhysics(deltaTime);
-    scene.simulate();
+    scene.simulate(deltaTime,10);
     renderer.render(scene, camera);
     time += deltaTime;
 }
@@ -137,7 +135,7 @@ function initInput() {
         raycaster.setFromCamera(mouseCoords, camera);
 
         // Creates a ball and throws it
-        var ballMass = 100;
+        var ballMass = 35;
         var ballRadius = 0.4;
         var object = new THREE.SphereGeometry(ballRadius, 14, 10);
         var ground_material = new Physijs.createMaterial(
@@ -166,9 +164,9 @@ function animate() {
 }
 var convexBreaker = new THREE.ConvexObjectBreaker();
 function createObject() {
-    var mass=100;
-    var towerHalfExtents = new THREE.Vector3( 2, 5, 2 );
-    pos.set(-8, 5.5, 0);
+    var mass = 1000;
+    var towerHalfExtents = new THREE.Vector3(2, 5, 2);
+    pos.set(-8, 5.6, 0);
     quat.set(0, 0, 0, 1);
     var geometry = new THREE.BoxGeometry(towerHalfExtents.x * 2, towerHalfExtents.y * 2, towerHalfExtents.z * 2);
     var material = new Physijs.createMaterial(
@@ -179,7 +177,7 @@ function createObject() {
     var object = new Physijs.ConvexMesh(geometry, material, mass);
     object.position.copy(pos);
     object.quaternion.copy(quat);
-    object.addEventListener("collision",breakableObject);
+    object.addEventListener("collision", breakableObject);
     scene.add(object);
     convexBreaker.prepareBreakableObject(object, mass, new THREE.Vector3(), new THREE.Vector3(), true);
 //
